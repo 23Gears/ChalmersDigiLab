@@ -1,0 +1,288 @@
+PROCESSING-
+ 
+import cc.arduino.*;
+import org.firmata.*;
+ 
+import processing.core.*;
+import processing.data.*;
+import processing.event.*;
+import processing.opengl.*;
+ 
+import processing.serial.*;
+ 
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.PrintWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
+ 
+public class sketch_170505a extends PApplet {
+ 
+ 
+ 
+//VARIABLER
+Serial myPort;        // The serial port
+int h = 250;
+ 
+int i = 0;
+int k = 0;
+int t = 0;
+int m = 0;
+int ttot = 300;
+int tinit = 0;
+int[] xPos = {h,h*2,h,h*2};
+int yPos1 = h;
+int yPos2 = 2*h;
+float byPos = 575;
+ 
+boolean run = false;
+boolean light = false;
+int data = 0;
+ 
+float[] B = new float[4];
+color c1 = color(255,0,0,255);
+color c2 = color(0,0,255);
+color c3 = color(123,24,55);
+color c4 = color(55,200,0);
+color c5 = color(100,100,44);
+color c6 = color(34,22,255);
+color c7 = color(100,100,100);
+color c8 = color(68,210,80);
+ 
+color[] colorArray = {c1,c2,c3,c4};
+ 
+int z = 0;
+ 
+ 
+public void setup () {
+  // set the window size:
+ 
+ 
+  // List all the available serial ports
+  // if using Processing 2.1 or later, use Serial.printArray()
+  println(Serial.list());
+ 
+  // I know that the first port in the serial list on my mac
+  // is always my  Arduino, so I open Serial.list()[0].
+  // Open whatever port is the one you're using.
+  myPort = new Serial(this, Serial.list()[0], 9600);
+ 
+  // don't generate a serialEvent() unless you get a newline character:
+  myPort.bufferUntil('\n');
+ 
+  // set inital background:
+  background(255 , 255, 255);
+  fill(0, 102, 153);
+  textSize(26);
+  text("00:00", h/10, h/1.5f);
+ 
+ 
+   //battery
+   beginShape();
+   fill(0,0,0);
+   rect(80, 280, 30, 20);
+   fill(0,255,0, 1);
+   rect(20, 300, 150, 275);
+   
+ 
+  textSize(15);
+  fill(0,0,0);
+  stroke(0);
+  line(0,0,h-1,0);
+  line(h/2,0,h/2,textAscent()+textDescent()+h/10);
+  line(0,textAscent()+textDescent()+h/10,h-1,textAscent()+textDescent()+h/10);
+  line(h-1,0,h-1,textAscent()+textDescent()+h/10);
+  text("K\u00f6r", h/10, textAscent()+textDescent());
+  text("Lys", h/2+h/10, textAscent()+textDescent());
+}
+public void draw () {
+  stroke(255, 128, 0, 128);  // bright orange with 50% transparency
+  strokeWeight(2);  // Beastly
+  for(int i = 0; i<4; i++){
+   if(k>3)
+   k=0;
+   
+  stroke(colorArray[k]);  
+  line(xPos[i], yPos1, xPos[i], yPos1 - B[k]);
+  k++;
+  stroke(colorArray[k]);
+  line(xPos[i], yPos2, xPos[i], yPos2 - B[k]);
+  k++;
+   }
+ 
+  // at the edge of the screen, go back to the beginning:
+if (xPos[i] >= i*h + 2*h) {
+    xPos[0] = h;
+    xPos[1] = 2*h;
+    stroke(255, 255, 255, 0);
+   // stroke(153); //border around graphs
+   // strokeWeight(2);
+    fill(255, 255, 255);
+    rect(h,0,4*h,3*h);
+  } else {
+    // increment the horizontal position:
+    for(int j = 0; j<2; j++)
+      xPos[j]++;
+  }
+ 
+//RUNTIMER
+if (run) {
+    stroke(255, 255, 255, 0);
+    fill(255, 255, 255);
+    rect(0,textAscent()+textDescent()+h/10+1,h-1,h/2);
+   
+    textSize(26);
+    stroke(0);
+    fill(0, 102, 153);
+    t = millis()-tinit;
+    m = (t/1000)/60;
+    text("0" + str((ttot-t/1000)/60) +":" + str(59+m*60-t/1000), h/10, h/1.5f);
+    if(t/1000>ttot){
+      run = false;
+    }
+   
+   
+    byPos = byPos - map(data,0,pow(2,32),0,275);
+    stroke(0,255,0);
+    line(20,byPos,170,byPos);
+    if(byPos < 300){
+      run = false;
+    }
+   
+   
+}
+ 
+if(light){
+    myPort.write('1');
+    }
+else{
+  myPort.write('0');
+}
+ 
+}
+ 
+ 
+public void serialEvent (Serial myPort) {
+  // get the ASCII string:
+  String inString = myPort.readStringUntil('\n');
+ 
+  if (inString != null) {
+    // trim off any whitespace:
+    inString = trim(inString);
+    //inByte = float(inString.subString(0,(sizeof(inString))/2));
+    //float[] inByte = new float[2];
+    String[] SA = split(inString,".");
+   
+    try {
+    for(int i = 0; i< SA.length; i++) {
+    B[i] = map(PApplet.parseFloat(SA[i]),0,1023,0,h);
+    if(run){
+      data = data + (int)B[i];
+      //println(data);
+    }
+ 
+   
+    //delay(1);
+    //println("Sensor value "+data);
+    }
+    }
+    catch(RuntimeException e) {
+       println("Error");
+    }
+   
+  // println("First sensor value="+SA[0]);
+  //nums[1]=second sensor value
+  //println("Second Sensor value="+SA[1]);
+    // convert to an int and map to the screen
+    // convert to an int and map to the screen height:
+    //inByte = float(inString);
+    // B2 = map(inByte[0], 255, 0, 0, height);
+    // B1 = map(inByte[1], 255, 0, 0, height);
+    //map the second sensor value
+ 
+  }
+}
+ 
+public void mouseClicked() {
+   // println(h/2-textAscent());
+   // println(h/2+textAscent()+textDescent());
+   // println(mouseY);
+    //println((h/2-h/4)+textWidth("K\u00f6r"));
+    if(mouseX <= h/2) {
+      if(mouseY < textAscent()+textDescent()+h/10 && run != true){
+      run = true;
+      println("run");
+      }
+    }
+    else if(mouseY <= textAscent()+textDescent()+h/10) {
+      if(light != true)
+      light = true;
+      else
+        light = false;
+    }
+}
+  public void settings() {  size(750,600); }
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "sketch_170505a" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
+}
+ 
+ 
+--- ARDUINO
+ 
+int inPin1 = 0;
+int inPin2 = 1;
+int inPin3 = 2;
+int inPin4 = 3;
+int inPin5 = 4;
+int inPin6 = 5;
+int inPin7 = 6;
+int inPin8 = 7;
+ 
+ 
+int val1,val2,val3,val4;
+int ledPin1= 14;
+int ledPin2 = 15;
+int ledPin3 = 16;
+int ledPin4 = 17;
+ 
+ 
+void setup() {
+ 
+  pinMode(ledPin1, OUTPUT);
+  pinMode(ledPin2, OUTPUT);
+  pinMode(ledPin3, OUTPUT);
+  pinMode(ledPin4, OUTPUT);
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+}
+ 
+void loop() {
+  // put your main code here, to run repeatedly:
+  val1 = analogRead(inPin1);
+  val2 = analogRead(inPin2);
+  val3 = analogRead(inPin3);
+  val4 = analogRead(inPin4);
+  Serial.print(val1);
+  Serial.print('.');
+  Serial.print(val2);
+  Serial.print('.');
+  Serial.print(val3);
+  Serial.print('.');
+  Serial.println(val4);
+  delay(2);
+ 
+   analogWrite(ledPin1, val1); // turn the LED on
+   analogWrite(ledPin2, val2);
+   analogWrite(ledPin3, val3);
+   analogWrite(ledPin4, val4);
+   delay(1); // Wait 10 milliseconds for next reading
+}
