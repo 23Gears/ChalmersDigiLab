@@ -1,0 +1,24 @@
+  int ledpin1 = 4;
+  int ledpin2 = 5;
+  int ldrpin = 1;
+  int value = 0;
+  
+  void setup()
+  {
+    
+/*    pinMode(ldrpin, INPUT);
+    digitalWrite(ldrpin, LOW); */
+    Serial.begin(9600);
+  }
+  void loop()
+  {
+    value = analogRead(ldrpin);
+    value = constrain(value,000,128);
+    value = map(value,000,128,0,255);
+  
+  
+    Serial.println(value);
+    analogWrite(ledpin, value);
+  
+    delay(30);
+  }
