@@ -1,0 +1,63 @@
+int inPin0 = 0;
+int inPin1 = 1;
+int inPin2 = 2;
+int inPin3 = 3;
+int inPin4 = 4;
+int inPin5 = 5;
+int inPin6 = 6;
+int inPin7 = 7;
+
+ 
+ 
+int val0,val1,val2,val3;
+int ledPin1= 3;
+int ledPin2 = 4;
+int ledPin3 = 5;
+int ledPin4 = 6;
+ 
+ 
+void setup() {
+
+
+
+  pinMode(ledPin1, OUTPUT);
+  pinMode(ledPin2, OUTPUT);
+  pinMode(ledPin3, OUTPUT);
+  pinMode(ledPin4, OUTPUT);
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+}
+ 
+void loop() {
+  // put your main code here, to run repeatedly:
+  val0 = analogRead(inPin0);
+  val0 = constrain(val0,000,128); /* Max the input value to 128 */
+  val0 = map(val0,000,128,0,255); /* Translate the input value to a value the LED can use - max 255 */
+  
+  val1 = analogRead(inPin1);
+  val1 = constrain(val1,000,255);
+  val1 = map(val1,000,255,0,255);
+  
+  val2 = analogRead(inPin2);
+  val2 = constrain(val2,000,1010);
+  val2 = map(val2,000,1010,0,255);
+  
+  val3 = analogRead(inPin3);
+  val3 = constrain(val3,000,128);
+  val3 = map(val3,000,128,0,255);
+  
+  Serial.print(val0);
+  Serial.print('.');
+  Serial.print(val1);
+  Serial.print('.');
+  Serial.print(val2);
+  Serial.print('.');
+  Serial.println(val3);
+  delay(2);
+ 
+   analogWrite(ledPin1, val1); // turn the LED on
+   analogWrite(ledPin2, val1);
+   analogWrite(ledPin3, val1);
+   analogWrite(ledPin4, val1);
+   delay(1); // Wait 30 milliseconds for next reading
+}
